@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src=""https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Finance Manager</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+</head>
+<body>
+<div class="container"></div></body>
+<div class="summary">
+<h2>Spending Summary</h2>
+{% if advice %}
+    <div class="advice">{{ advice }}</div>
+{% endif %}
+
+<table>  <!-- replaces ul -->
+    ...
+</table>
+<canvas id"spendingChart"></canvas>
+<div class="total">Total Spent: ₹{{ total }}</div>
+<hr>
+
+<form action="/add" method="post">
+    Amount:
+    <input type="number" name="amount" required>
+    <br><br>
+
+    Category:
+    <select name="category">
+        <option>Food</option>
+        <option>Travel</option>
+        <option>Shopping</option>
+        <option>Investment</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Add Expense</button>
+</form>
+<script>
+    const labels = [
+        {% for category, total in data %}
+            "{{ category }}",
+        {% endfor %}
+    ];
+
+    const values = [
+        {% for category, total in data %}
+            {{ total }},
+        {% endfor %}
+    ];
+
+    new Chart(document.getElementById("spendingChart"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Spending by Category",
+                data: values
+            }]
+        }
+    });
+</script>
+</body>
+</html>
