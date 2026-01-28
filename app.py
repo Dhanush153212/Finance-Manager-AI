@@ -2,58 +2,110 @@ from flask import Flask, render_template, request,redirect, url_for
 import sqlite3
 import os
 app = Flask(__name__)
+def init_db():
+    conn = sqlite3.connect("finance.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS expenses(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        amount INTEGER,
+        category TEXT,
+        date TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS budgets(
+        category TEXT PRIMARY KEY,
+        budget_limit INTEGER
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
 
 @app.route("/")
 def home():
     conn = sqlite3.connect("finance.db")
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT category, SUM(amount) FROM expenses GROUP BY category"
-    )
+    # Create table if not exists
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS expenses(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            amount INTEGER,
+            category TEXT
+        )
+    """)
+
+    # Category totals
+    cur.execute("SELECT category, SUM(amount) FROM expenses GROUP BY category")
     data = cur.fetchall()
+
+    # All expenses
+    cur.execute("SELECT id, amount, category FROM expenses")
+    expenses = cur.fetchall()
+
+    conn.close()
 
     total_spent = sum(row[1] for row in data)
 
-    food = 0
-    investment = 0
-
-    for category, amount in data:
-        if category.lower() == "food":
-            food = amount
-        if category.lower() == "investment":
-            investment = amount
-
     advice = ""
-
-    if total_spent > 0:
-        if food / total_spent > 0.5:
-            advice = "You are spending more than 50% on food. Try to reduce expenses."
-        elif investment / total_spent < 0.2:
-            advice = "Your investment is less than 20%. Consider investing more."
-
-    conn.close()
 
     return render_template(
         "index.html",
         data=data,
+        expenses=expenses,
         total=total_spent,
         advice=advice
     )
-@app.route("/add", methods=["POST"])
-def add_expense():
-    amount = int(request.form["amount"])
+
+@app.route("/edit", methods=["POST"])
+def edit_expense():
+    id = request.form["id"]
+    amount = request.form["amount"]
     category = request.form["category"]
+    date = request.form["date"]
+    
+@app.route("/delete", methods=["POST"])
+def delete_expense():
+    id = request.form["id"]
+
+    conn = sqlite3.connect("finance.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM expenses WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("home"))
 
     conn = sqlite3.connect("finance.db")
     cur = conn.cursor()
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS expenses (amount INT, category TEXT)"
+        "UPDATE expenses SET amount=?, category=? WHERE id=?",
+        (amount, category, id)
     )
-    cur.execute(
-        "INSERT INTO expenses VALUES (?, ?)",
-        (amount, category)
-    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("home"))
+
+@app.route("/set-budget", methods=["POST"])
+def set_budget():
+    category = request.form["category"].lower()
+    budget_limit = int(request.form["budget_limit"])
+
+    conn = sqlite3.connect("finance.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT OR REPLACE INTO expenses (category, amount, date)
+        VALUES (?, ?, ?)
+    """, (category, budget_limit))
+
     conn.commit()
     conn.close()
 

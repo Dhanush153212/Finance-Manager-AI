@@ -6,6 +6,13 @@
     <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
 </head>
 <body>
+    {% if warnings %}
+    <div style="color: red;">
+        {% for w in warnings %}
+            <p>⚠️ {{ w }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
 <div class="container"></div></body>
 <div class="summary">
 <h2>Spending Summary</h2>
@@ -25,7 +32,7 @@
 {% endfor %}
 </ul>
 <hr>
-
+ 
 <form action="/add" method="post">
     Amount:
     <input type="number" name="amount" required>
@@ -39,8 +46,31 @@
         <option>Investment</option>
     </select>
     <br><br>
-
+<label>Date:</label>
+<input type="date" name="date" required>
     <button type="submit">Add Expense</button>
+</form>
+<hr>
+
+<h3>Set Monthly Budget</h3>
+<h3>Edit Expense</h3>
+<form action="/edit" method="post">
+    <input type="number" name="id" placeholder="Expense ID" required>
+    <input type="number" name="amount" placeholder="New Amount" required>
+    <input type="text" name="category" placeholder="New Category" required>
+    <button type="submit">Update</button>
+</form>
+
+<h3>Delete Expense</h3>
+<form action="/delete" method="post">
+    <input type="number" name="id" placeholder="Expense ID" required>
+    <button type="submit">Delete</button>
+</form>
+
+<form action="/set-budget" method="post">
+    <input type="text" name="category" placeholder="Category (food, rent)" required>
+    <input type="number" name="budget_limit" placeholder="Budget Amount" required>
+    <button type="submit">Save Budget</button>
 </form>
 <script>
     const labels = [
