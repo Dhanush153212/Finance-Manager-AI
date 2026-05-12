@@ -213,21 +213,6 @@ Visual charts include:
 
 The `render.yaml` file is already configured for deployment.
 
----
-
-## 📸 Screenshots
-
-### Dashboard
-Dashboard displaying balance overview, expense breakdown, and recent transactions.
-
-### Add Expense
-Simple and intuitive form to record new transactions.
-
-### Reports & Analytics
-Beautiful charts showing spending patterns and financial analysis.
-
----
-
 ## 🧪 Testing
 
 Run tests (if available):
